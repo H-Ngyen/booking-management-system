@@ -1,0 +1,55 @@
+/* Design tokens — source of truth is docs/Design.md.
+   Light-first Modern SaaS Admin / Clean Enterprise. Every token reserves
+   a dark slot (see :root.dark) so dark mode lands without touching components. */
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --surface-2: #f1f5f9;
+  --surface-3: #e0e7ff;
+  --muted-foreground: #64748b;
+  --ink-2: #334155;
+  --ink-4: #94a3b8;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #e0e7ff;
+  --accent-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --destructive: #dc2626;
+  --destructive-bg: #fee2e2;
+  --border: #e2e8f0;
+  --line-2: #cbd5e1;
+  --input: #e2e8f0;
+  --ring: #4f46e5;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #94a3b8;
+  --status-pending: #b45309;
+  --status-pending-bg: #fef3c7;
+  --status-confirmed: #1d4ed8;
+  --status-confirmed-bg: #dbeafe;
+  --status-completed: #047857;
+  --status-completed-bg: #d1fae5;
+  --status-cancelled: #64748b;
+  --status-cancelled-bg: #f1f5f9;
+  --radius: 0.625rem;
+}
+
+:root.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --surface-2: #1e293b;
+  --surface-3: #312e81;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --line-2: #475569;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "booking-management-system",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.3.4",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "dev:db": "docker compose up -d db"
+  },
+  "devDependencies": {
+    "turbo": "^2.10.12"
+  }
+}

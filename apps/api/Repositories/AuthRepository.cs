@@ -1,9 +1,6 @@
-namespace API.Repositories;
+using API.Interfaces.Repositories;
 
-public interface IAuthRepository
-{
-    
-}
+namespace API.Repositories;
 
 public class AuthRepository : IAuthRepository
 {

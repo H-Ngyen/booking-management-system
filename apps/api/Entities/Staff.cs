@@ -1,18 +1,15 @@
-using API.Constraints;
-
 namespace API.Entities
 {
-    public class User
+    public class Staff
     {
         public int Id { get; set; }
-        public required string UserName { get; set; }
+        public required string FullName { get; set; }
         public required string Email { get; set; }
-        public UserRole Role { get; set; } = UserRole.Customer;
-        public required string PasswordHash { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
+        public ICollection<WorkSchedule> Schedules { get; set; } = [];
         public ICollection<Booking> Bookings { get; set; } = [];
     }
 }

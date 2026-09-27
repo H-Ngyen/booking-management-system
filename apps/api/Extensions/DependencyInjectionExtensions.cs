@@ -1,0 +1,36 @@
+using API.Authorization;
+using API.Interfaces;
+using API.Interfaces.Authorization;
+using API.Interfaces.Repositories;
+using API.Interfaces.Services;
+using API.Middlewares;
+using API.Repositories;
+using API.Services;
+
+namespace API.Extensions;
+
+public static class DependencyInjectionExtension
+{
+    public static IServiceCollection AddDependencyInjection(this IServiceCollection services)
+    {
+        // Middleware
+        services.AddScoped<ErrorHandlingMiddleware>();
+
+        //Services
+        services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IServicesService, ServicesService>();
+        
+
+        //Repository
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IAuthRepository, AuthRepository>();
+        services.AddScoped<IServicesRepository, ServicesRepository>();
+
+        // Authorization
+        services.AddScoped<IServicesAuthorization, ServicesAuthorization>();
+
+        return services;
+    }
+}

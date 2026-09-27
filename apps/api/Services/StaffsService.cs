@@ -13,7 +13,7 @@ namespace API.Services;
 
 public class StaffsService(IStaffsRepository staffsRepository,
     IWorkSchedulesRepository workSchedulesRepository,
-    IBookingRepository bookingRepository,
+    IBookingsRepository bookingsRepository,
     IMapper mapper,
     IUserContext userContext,
     IUserRepository userRepository,
@@ -134,7 +134,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
         if (schedule == null || schedule.StaffId != staffId)
             throw new NotFoundException("Không tìm thấy ca làm việc.");
 
-        if (await bookingRepository.HasActiveBookingsAsync(staffId, schedule.WorkDate, schedule.StartTime, schedule.EndTime))
+        if (await bookingsRepository.HasActiveBookingsAsync(staffId, schedule.WorkDate, schedule.StartTime, schedule.EndTime))
             throw new ConflictException("Không thể xóa ca làm việc đã có booking.");
 
         await workSchedulesRepository.DeleteSchedule(schedule);

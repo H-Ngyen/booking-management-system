@@ -22,6 +22,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IServicesService, ServicesService>();
         services.AddScoped<IStaffsService, StaffsService>();
+        services.AddScoped<IBookingsService, BookingsService>();
         
 
         //Repository
@@ -30,11 +31,12 @@ public static class DependencyInjectionExtension
         services.AddScoped<IServicesRepository, ServicesRepository>();
         services.AddScoped<IStaffsRepository, StaffsRepository>();
         services.AddScoped<IWorkSchedulesRepository, WorkSchedulesRepository>();
-        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IBookingsRepository, BookingsRepository>();
 
         // Authorization
         services.AddScoped<IServicesAuthorization, ServicesAuthorization>();
         services.AddScoped<IStaffsAuthorization, StaffsAuthorization>();
+        services.AddScoped<IBookingsAuthorization, BookingsAuthorization>();
 
         return services;
     }

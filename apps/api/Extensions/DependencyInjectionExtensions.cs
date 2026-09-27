@@ -21,15 +21,20 @@ public static class DependencyInjectionExtension
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IServicesService, ServicesService>();
+        services.AddScoped<IStaffsService, StaffsService>();
         
 
         //Repository
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IServicesRepository, ServicesRepository>();
+        services.AddScoped<IStaffsRepository, StaffsRepository>();
+        services.AddScoped<IWorkSchedulesRepository, WorkSchedulesRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
 
         // Authorization
         services.AddScoped<IServicesAuthorization, ServicesAuthorization>();
+        services.AddScoped<IStaffsAuthorization, StaffsAuthorization>();
 
         return services;
     }

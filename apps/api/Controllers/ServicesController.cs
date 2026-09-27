@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
-// api/v1/service
-public class ServiceController(IServicesService servicesService) : BaseApiController
+// api/v1/services
+public class ServicesController(IServicesService servicesService) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<PagedResult<ServiceDto>>> GetAllMatching([FromQuery] GetAllMatchServiceRequest request)

@@ -45,6 +45,9 @@ export interface Booking {
   customerNote?: string | null;
   cancellationReason?: string | null;
   createdAt: string; // ISO
+  serviceName?: string | null;
+  customerName?: string | null;
+  staffName?: string | null;
   service?: ServiceItem;
   staff?: Staff;
 }

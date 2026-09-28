@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useCancelBooking, useMyBookings } from '@/hooks';
 import { getErrorMessage } from '@/lib/error-messages';
+import { formatDateTimeVN } from '@/lib/datetime';
 import type { BookingStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -113,6 +114,7 @@ export default function MyBookingsPage() {
               <TableRow>
                 <TableHead>Mã</TableHead>
                 <TableHead>Dịch vụ</TableHead>
+                <TableHead>Nhân viên</TableHead>
                 <TableHead>Bắt đầu</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead>Hành động</TableHead>
@@ -122,8 +124,9 @@ export default function MyBookingsPage() {
               {data.items.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-mono text-[13px]">{b.bookingCode}</TableCell>
-                  <TableCell>{b.service?.name ?? `#${b.serviceId}`}</TableCell>
-                  <TableCell>{new Date(b.startTime).toLocaleString('vi-VN')}</TableCell>
+                  <TableCell>{b.serviceName ?? b.service?.name ?? `#${b.serviceId}`}</TableCell>
+                  <TableCell>{b.staffName ?? b.staff?.fullName ?? `#${b.staffId}`}</TableCell>
+                  <TableCell>{formatDateTimeVN(b.startTime)}</TableCell>
                   <TableCell>
                     <StatusBadge status={b.status} />
                   </TableCell>

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState, type FormEvent } from 'react';
 import { useAvailableSlots, useCreateBooking, useServices, useStaffs } from '@/hooks';
 import { getErrorMessage } from '@/lib/error-messages';
+import { addMinutes, formatDateTimeVN, formatTimeVN } from '@/lib/datetime';
 import { ApiError } from '@/lib/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -143,7 +144,7 @@ function BookingForm() {
           {slots && slots.length > 0 && (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Khung giờ trống">
               {slots.map((iso) => {
-                const time = new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                const time = formatTimeVN(iso);
                 const selected = slot === iso;
                 return (
                   <button
@@ -175,11 +176,9 @@ function BookingForm() {
         <CardContent className="space-y-4">
           {selectedService && slot && (
             <p className="rounded-lg bg-surface-2 px-3 py-2 text-sm text-ink-2">
-              {selectedService.name} · Bắt đầu {new Date(slot).toLocaleString('vi-VN')} · Kết thúc
+              {selectedService.name} · Bắt đầu {formatDateTimeVN(slot)} · Kết thúc
               dự kiến{' '}
-              {new Date(
-                new Date(slot).getTime() + selectedService.durationMinutes * 60_000,
-              ).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+              {formatTimeVN(addMinutes(slot, selectedService.durationMinutes))}
             </p>
           )}
           <Field label="Ghi chú (không bắt buộc)" htmlFor="note">

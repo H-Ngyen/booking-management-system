@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
 import { useCreateSchedule, useDeleteSchedule, useSchedules, useStaffs } from '@/hooks';
 import { getErrorMessage } from '@/lib/error-messages';
+import { formatDateVN, formatShiftTime } from '@/lib/datetime';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -113,18 +114,13 @@ export default function AdminSchedulesPage() {
               {grouped.map(([date, shifts]) => (
                 <TableRow key={date}>
                   <TableCell className="font-semibold whitespace-nowrap">
-                    {new Date(`${date}T00:00:00`).toLocaleDateString('vi-VN', {
-                      weekday: 'short',
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })}
+                    {formatDateVN(date, { weekday: true })}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
                       {shifts.map((s) => (
-                        <span key={s.id} className="rounded-full bg-surface-3 px-3 py-1 text-[13px] font-semibold text-primary">
-                          {s.startTime} – {s.endTime}
+                        <span key={s.id} className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-3 py-1 text-[13px] font-semibold text-primary">
+                          {formatShiftTime(s.startTime)} – {formatShiftTime(s.endTime)}
                           <button
                             type="button"
                             aria-label={`Xóa ca ${s.startTime} – ${s.endTime}`}

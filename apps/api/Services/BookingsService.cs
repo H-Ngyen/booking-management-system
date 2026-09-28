@@ -27,6 +27,11 @@ public class BookingsService(IBookingsRepository bookingsRepository,
     public async Task<PagedResult<BookingDto>> GetMyBookings(GetBookingsRequest request)
     {
         CurrentUser currentUser = userContext.GetCurrentUser();
+        User me = await userRepository.GetUserById(currentUser.Id) ?? throw new ForbidException();
+        // Read-own-list needs no resource: ownership is inherent in the filter.
+        // Only the active check applies (Authorize+Read would demand a resource).
+        if(!me.IsActive)
+            throw new ForbidException();
 
         (IEnumerable<Booking>? bookings, int totalCount) = await bookingsRepository.GetAllMatchAsync(
             request.Date,

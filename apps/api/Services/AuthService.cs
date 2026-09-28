@@ -23,6 +23,10 @@ public class AuthService(
         if(!isVerify) 
             throw new UnauthorizedException("Tên người dùng hoặc mật khẩu không hợp lệ", "INVALID_CREDENTIALS");
 
+        // Locked accounts get no token (same message: do not reveal lock state).
+        if(!user.IsActive)
+            throw new UnauthorizedException("Tên người dùng hoặc mật khẩu không hợp lệ", "INVALID_CREDENTIALS");
+
         CurrentUser currentUser = mapper.Map<CurrentUser>(user);
         string token = tokenService.CreateToken(currentUser);
 

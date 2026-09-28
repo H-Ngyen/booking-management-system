@@ -39,6 +39,10 @@ public class StaffsService(IStaffsRepository staffsRepository,
     public async Task<PagedResult<StaffDto>> GetAllMatch(GetAllMatchStaffRequest request)
     {
         CurrentUser currentUser = userContext.GetCurrentUser();
+        User user = await userRepository.GetUserById(currentUser.Id) ?? throw new ForbidException();
+
+        if(!staffsAuthorization.Authorize(user, ResourceOperation.Read))
+            throw new ForbidException();
 
         bool isAdmin = currentUser.Role == nameof(UserRole.Admin);
         (IEnumerable<Staff>? staffs, int totalCount) = await staffsRepository.GetAllMatchAsync(

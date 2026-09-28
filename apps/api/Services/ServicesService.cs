@@ -33,6 +33,10 @@ public class ServicesService(IServicesRepository servicesRepository,
     public async Task<PagedResult<ServiceDto>> GetAllMatch(GetAllMatchServiceRequest request)
     {
         CurrentUser currentUser = userContext.GetCurrentUser();
+        User user = await userRepository.GetUserById(currentUser.Id) ?? throw new ForbidException();
+
+        if(!servicesAuthorization.Authorize(user, ResourceOperation.Read))
+            throw new ForbidException();
 
         bool isAdmin = currentUser.Role == nameof(UserRole.Admin);
         (IEnumerable<Service>? services, int totalCount) = await servicesRepository.GetAllMatchAsync(

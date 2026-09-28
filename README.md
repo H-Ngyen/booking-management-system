@@ -127,22 +127,33 @@ The web app calls the API through `NEXT_PUBLIC_API_URL`
 
 ## 8. Done / not done
 
-**Done (all required parts):** login + 2 roles; service management
-(add / edit / lock / reopen, search, paging); staff management; work schedules
-(blocks overlap, blocks deleting shifts that have bookings); booking with
-backend-computed end time; double-booking guard (409 + row lock against
-races); customer view / cancel own bookings (date + status filter); admin
-confirm / complete / cancel all bookings; sample seed; Swagger; Hangfire job
-that auto-cancels overdue bookings (runs daily at 00:00); SignalR realtime
-updates; EF Core migrations; basic responsive design; integration tests.
+### Required parts (spec) — all done
 
-**Bonus already included:** integration tests (109 tests), full-stack Docker
-Compose, SignalR realtime, Hangfire overdue job, safe concurrent booking
-(`FOR UPDATE` + transaction).
+- [x] Login + 2 roles (admin / customer), JWT auth
+- [x] Service management: add / edit / lock / reopen, name search, paging
+- [x] Staff management: add / edit / lock / reopen
+- [x] Work schedules: per-staff shifts, `start < end`, no overlapping shifts, no deleting shifts that have bookings
+- [x] Booking: customer picks start time, backend computes end time
+- [x] Booking guards: no past, inside work hours, active service + staff
+- [x] Double-booking guard: `409 Conflict` + `FOR UPDATE` row lock against races
+- [x] Customer: view / filter (date + status) / cancel own bookings, reason required
+- [x] Admin: confirm / complete / cancel all bookings, filters + paging
+- [x] Sample seed (spec minimums), Swagger, EF Core migrations
+- [x] Basic responsive design, integration tests (109 passing)
 
-**Not done:** Postman collection (Swagger covers it), sign-up / forgot
-password (not required), visual calendar view (the current list is clear and
-usable, as required).
+### Bonus — already included
+
+- [x] Integration tests (109 tests, Testcontainers Postgres)
+- [x] Full-stack Docker Compose (one-command demo)
+- [x] SignalR realtime booking updates
+- [x] Hangfire job auto-cancels overdue bookings (daily 00:00)
+- [x] Safe concurrent booking (`FOR UPDATE` + transaction)
+
+### Not done
+
+- [ ] Postman collection (Swagger covers it)
+- [ ] Sign-up / forgot password (not required by spec)
+- [ ] Visual calendar view (list is clear and usable, as required)
 
 ## 9. Repo layout
 

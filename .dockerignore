@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+apps/*/node_modules
+**/bin
+**/obj
+TestResults
+.env

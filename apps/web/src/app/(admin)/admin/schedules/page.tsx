@@ -1,0 +1,182 @@
+'use client';
+
+import { useMemo, useState, type FormEvent } from 'react';
+import { X } from 'lucide-react';
+import { useCreateSchedule, useDeleteSchedule, useSchedules, useStaffs } from '@/hooks';
+import { getErrorMessage } from '@/lib/error-messages';
+import { formatDateVN, formatShiftTime } from '@/lib/datetime';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { EmptyState, ErrorState, Spinner } from '@/components/ui/feedback';
+import { Field, FieldError } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+export default function AdminSchedulesPage() {
+  const { data: staffs, isLoading: staffsLoading } = useStaffs(false);
+  const [staffId, setStaffId] = useState<number | null>(null);
+  const [workDate, setWorkDate] = useState('');
+  const [startTime, setStartTime] = useState('08:00');
+  const [endTime, setEndTime] = useState('12:00');
+  const [formError, setFormError] = useState('');
+
+  const { data: schedules, isLoading, isError, error, refetch } = useSchedules(staffId);
+  const createSchedule = useCreateSchedule();
+  const deleteSchedule = useDeleteSchedule();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, NonNullable<typeof schedules>>();
+    for (const s of schedules ?? []) {
+      const list = map.get(s.workDate) ?? [];
+      list.push(s);
+      map.set(s.workDate, list);
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [schedules]);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (staffId == null) return setFormError('Hãy chọn nhân viên.');
+    if (!workDate) return setFormError('Hãy chọn ngày làm việc.');
+    if (startTime >= endTime) return setFormError('Giờ bắt đầu phải nhỏ hơn giờ kết thúc.');
+    setFormError('');
+    createSchedule.mutate(
+      { staffId, input: { workDate, startTime, endTime } },
+      { onError: (err) => setFormError(getErrorMessage(err)) },
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-bold text-ink">Quản lý lịch làm việc</h1>
+        <p className="text-sm text-ink-3">Thiết lập ca làm việc cho từng nhân viên. Booking phải nằm trong giờ làm việc.</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Thêm ca làm việc</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5" noValidate>
+            <Field label="Nhân viên">
+              <Select value={staffId ? String(staffId) : ''} onValueChange={(v) => setStaffId(v ? Number(v) : null)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="— Chọn —" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(staffs?.items ?? []).map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.fullName} {!s.isActive && '(đã khóa)'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Ngày" htmlFor="sch-date">
+              <Input id="sch-date" type="date" value={workDate} onChange={(e) => setWorkDate(e.target.value)} />
+            </Field>
+            <Field label="Bắt đầu" htmlFor="sch-start">
+              <Input id="sch-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            </Field>
+            <Field label="Kết thúc" htmlFor="sch-end">
+              <Input id="sch-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </Field>
+            <div className="flex items-end">
+              <Button type="submit" loading={createSchedule.isPending} className="w-full">
+                Thêm ca
+              </Button>
+            </div>
+          </form>
+          <FieldError message={formError} />
+        </CardContent>
+      </Card>
+
+      {staffsLoading && <Spinner label="Đang tải nhân viên…" />}
+      {staffId == null && !staffsLoading && <EmptyState title="Chọn nhân viên để xem lịch làm việc" />}
+      {staffId != null && isLoading && <Spinner label="Đang tải lịch…" />}
+      {staffId != null && isError && <ErrorState message={getErrorMessage(error)} onRetry={() => refetch()} />}
+      {staffId != null && schedules && schedules.length === 0 && <EmptyState title="Chưa có ca làm việc nào" />}
+      {staffId != null && grouped.length > 0 && (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ngày</TableHead>
+                <TableHead>Ca làm việc</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {grouped.map(([date, shifts]) => (
+                <TableRow key={date}>
+                  <TableCell className="font-semibold whitespace-nowrap">
+                    {formatDateVN(date, { weekday: true })}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      {shifts.map((s) => (
+                        <span key={s.id} className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-3 py-1 text-[13px] font-semibold text-primary">
+                          {formatShiftTime(s.startTime)} – {formatShiftTime(s.endTime)}
+                          <button
+                            type="button"
+                            aria-label={`Xóa ca ${s.startTime} – ${s.endTime}`}
+                            onClick={() => {
+                              setDeletingId(s.id);
+                              setDeleteError('');
+                            }}
+                            className="rounded-full p-0.5 hover:bg-surface-2"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+
+      <Dialog open={deletingId != null} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xóa ca làm việc</DialogTitle>
+            <DialogDescription>
+              Ca đã có booking không thể xóa. Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm font-medium text-red-600">{deleteError}</p>}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeletingId(null)}>
+              Đóng
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              loading={deleteSchedule.isPending}
+              onClick={() => {
+                if (staffId == null || deletingId == null) return;
+                setDeleteError('');
+                deleteSchedule.mutate(
+                  { staffId, scheduleId: deletingId },
+                  {
+                    onSuccess: () => setDeletingId(null),
+                    onError: (err) => setDeleteError(getErrorMessage(err)),
+                  },
+                );
+              }}
+            >
+              Xác nhận xóa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

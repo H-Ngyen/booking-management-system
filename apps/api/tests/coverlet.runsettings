@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[api]*</Include>
+          <!-- Test assembly itself + EF-generated migrations are not product code. -->
+          <Exclude>[api.Tests]*,[api]API.Data.Migrations.*</Exclude>
+          <ExcludeByAttribute>Obsolete,GeneratedCode</ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

@@ -65,6 +65,10 @@ public class BookingDto
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
     public int StaffId { get; set; }
+    // Display names, populated from navigations (null when not loaded).
+    public string? ServiceName { get; set; }
+    public string? CustomerName { get; set; }
+    public string? StaffName { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public BookingStatus Status { get; set; }

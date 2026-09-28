@@ -14,6 +14,9 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
         DateTime? dayEnd = date?.ToDateTime(TimeOnly.MinValue).AddDays(1);
 
         IQueryable<Booking>? baseQuery = NoTrackingQuery
+            .Include(b => b.Service)
+            .Include(b => b.Customer)
+            .Include(b => b.Staff)
             .Where(b => (customerId == null || b.CustomerId == customerId) &&
                 (status == null || b.Status == status) &&
                 (dayStart == null || (b.StartTime >= dayStart && b.StartTime < dayEnd)));
@@ -30,7 +33,11 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
     }
 
     public async Task<Booking?> GetById(int id)
-        => await TrackingQuery.FirstOrDefaultAsync(b => b.Id == id);
+        => await TrackingQuery
+            .Include(b => b.Service)
+            .Include(b => b.Customer)
+            .Include(b => b.Staff)
+            .FirstOrDefaultAsync(b => b.Id == id);
 
     public async Task<Booking?> CreateBookingAsync(Booking entity)
     {

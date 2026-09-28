@@ -137,7 +137,13 @@ public class BookingsService(IBookingsRepository bookingsRepository,
 
         await notifier.NotifyBookingChangedAsync(newBooking.Id, newBooking.CustomerId, BookingChangeTypes.Created);
 
-        return mapper.Map<BookingDto>(newBooking);
+        // Freshly inserted entity carries no navigations: fill display names
+        // from the already-loaded service/user instead of an extra query.
+        var created = mapper.Map<BookingDto>(newBooking);
+        created.ServiceName = service.Name;
+        created.CustomerName = user.UserName;
+        created.StaffName = staff.FullName;
+        return created;
     }
 
     private async Task<string> GenerateBookingCodeAsync(DateTime start)

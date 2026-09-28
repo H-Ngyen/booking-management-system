@@ -21,8 +21,7 @@ public class ServicesRepository(DataContext context) : BaseRepository<Service>(c
         IQueryable<Service>? baseQuery = _dbContext.Services
             .Where(s => (includeInactive || s.IsActive) &&
                 (searchPhraseLower == null ||
-                s.Name.ToLower().Contains(searchPhraseLower) || 
-                (s.Description != null && s.Description.ToLower().Contains(searchPhraseLower))));
+                s.Name.ToLower().Contains(searchPhraseLower)));
 
         int totalCount = await baseQuery.CountAsync();
 

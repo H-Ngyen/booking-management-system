@@ -10,8 +10,8 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
 {
     public async Task<(IEnumerable<Booking>?, int)> GetAllMatchAsync(DateOnly? date, BookingStatus? status, int? customerId, int pageSize, int pageNumber)
     {
-        DateTime? dayStart = date?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        DateTime? dayEnd = date?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(1);
+        DateTime? dayStart = date?.ToDateTime(TimeOnly.MinValue);
+        DateTime? dayEnd = date?.ToDateTime(TimeOnly.MinValue).AddDays(1);
 
         IQueryable<Booking>? baseQuery = NoTrackingQuery
             .Where(b => (customerId == null || b.CustomerId == customerId) &&
@@ -66,7 +66,7 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
 
     public async Task<IEnumerable<Booking>> GetActiveBookingsAsync(int staffId, DateOnly date)
     {
-        DateTime dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        DateTime dayStart = date.ToDateTime(TimeOnly.MinValue);
         DateTime dayEnd = dayStart.AddDays(1);
         return await NoTrackingQuery
             .Where(b => b.StaffId == staffId &&
@@ -77,8 +77,8 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
 
     public async Task<bool> HasActiveBookingsAsync(int staffId, DateOnly date, TimeOnly start, TimeOnly end)
     {
-        DateTime shiftStart = date.ToDateTime(start, DateTimeKind.Utc);
-        DateTime shiftEnd = date.ToDateTime(end, DateTimeKind.Utc);
+        DateTime shiftStart = date.ToDateTime(start);
+        DateTime shiftEnd = date.ToDateTime(end);
         return await NoTrackingQuery.AnyAsync(b =>
             b.StaffId == staffId &&
             b.Status != BookingStatus.Cancelled &&

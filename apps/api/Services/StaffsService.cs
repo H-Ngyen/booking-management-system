@@ -68,7 +68,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
             throw new ConflictException("Email nhân viên đã tồn tại.");
 
         mapper.Map(request, staff);
-        staff.UpdatedAt = DateTime.UtcNow;
+        staff.UpdatedAt = VnClock.Now;
 
         await staffsRepository.SaveChanges();
     }
@@ -100,7 +100,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
         if (!staffsAuthorization.Authorize(user, ResourceOperation.Create, staff))
             throw new ForbidException();
 
-        DateTime now = DateTime.UtcNow;
+        DateTime now = VnClock.Now;
         WorkSchedule? schedule = await workSchedulesRepository.CreateScheduleAsync(new WorkSchedule
         {
             StaffId = staffId,
@@ -142,8 +142,8 @@ public class StaffsService(IStaffsRepository staffsRepository,
     private Staff CreateNewStaff(CreateNewStaffRequest request)
     {
         Staff newStaff = mapper.Map<Staff>(request);
-        newStaff.CreatedAt = DateTime.UtcNow;
-        newStaff.UpdatedAt = DateTime.UtcNow;
+        newStaff.CreatedAt = VnClock.Now;
+        newStaff.UpdatedAt = VnClock.Now;
         return newStaff;
     }
 }

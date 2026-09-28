@@ -1,3 +1,4 @@
+using API.Common;
 using API.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,13 +14,18 @@ public class DataContext(DbContextOptions<DataContext> options) : DbContext(opti
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Domain datetimes are VN wall time: store without timezone, no conversions.
+        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            foreach (var prop in entity.GetProperties().Where(p => p.ClrType == typeof(DateTime)))
+                prop.SetColumnType("timestamp without time zone");
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DataContext).Assembly);
         base.OnModelCreating(modelBuilder);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var now = DateTime.UtcNow;
+        var now = VnClock.Now;
         foreach (var entry in ChangeTracker.Entries())
         {
             if (entry.Entity is not { } || entry.State is not (EntityState.Added or EntityState.Modified))

@@ -71,12 +71,12 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         IEnumerable<WorkSchedule> shifts = await workSchedulesRepository.GetSchedulesAsync(request.StaffId, date, date);
         IEnumerable<Booking> activeBookings = await bookingsRepository.GetActiveBookingsAsync(request.StaffId, date);
 
-        var now = DateTime.UtcNow;
+        var now = VnClock.Now;
         var slots = new List<string>();
         foreach(WorkSchedule shift in shifts)
         {
-            DateTime shiftStart = shift.WorkDate.ToDateTime(shift.StartTime, DateTimeKind.Utc);
-            DateTime shiftEnd = shift.WorkDate.ToDateTime(shift.EndTime, DateTimeKind.Utc);
+            DateTime shiftStart = shift.WorkDate.ToDateTime(shift.StartTime);
+            DateTime shiftEnd = shift.WorkDate.ToDateTime(shift.EndTime);
             for(DateTime cursor = shiftStart; cursor.AddMinutes(service.DurationMinutes) <= shiftEnd; cursor = cursor.AddMinutes(SlotStepMinutes))
             {
                 DateTime slotEnd = cursor.AddMinutes(service.DurationMinutes);
@@ -107,14 +107,17 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         if(!staff.IsActive)
             throw new BadRequestException("Nhân viên này hiện đang tạm nghỉ.");
 
-        DateTime start = request.StartTime!.Value.ToUniversalTime();
-        if(start <= DateTime.UtcNow)
+        // Frontend sends VN wall time (no offset). Force Unspecified kind so the
+        // value is stored/compared as wall time, never shifted.
+        DateTime start = DateTime.SpecifyKind(request.StartTime!.Value, DateTimeKind.Unspecified);
+        if(start <= VnClock.Now)
             throw new BadRequestException("Không thể đặt lịch trong quá khứ.");
 
         DateTime end = start.AddMinutes(service.DurationMinutes);
         if(!await IsWithinWorkingHours(request.StaffId, start, end))
             throw new BadRequestException("Khung giờ nằm ngoài giờ làm việc của nhân viên.");
 
+        DateTime now = VnClock.Now;
         Booking newBooking = new()
         {
             BookingCode = await GenerateBookingCodeAsync(start),
@@ -125,8 +128,8 @@ public class BookingsService(IBookingsRepository bookingsRepository,
             EndTime = end,
             Status = BookingStatus.Pending,
             CustomerNote = request.CustomerNote,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = now,
+            UpdatedAt = now,
         };
 
         newBooking = await bookingsRepository.CreateBookingAsync(newBooking)
@@ -172,7 +175,7 @@ public class BookingsService(IBookingsRepository bookingsRepository,
             throw new BadRequestException($"Không thể chuyển từ {booking.Status} sang {target}.");
 
         booking.Status = target;
-        booking.UpdatedAt = DateTime.UtcNow;
+        booking.UpdatedAt = VnClock.Now;
 
         await bookingsRepository.SaveChanges();
 
@@ -194,12 +197,12 @@ public class BookingsService(IBookingsRepository bookingsRepository,
 
         if(booking.Status == BookingStatus.Cancelled)
             throw new BadRequestException("Booking này đã bị hủy trước đó.");
-        if(booking.Status == BookingStatus.Completed || booking.StartTime <= DateTime.UtcNow)
+        if(booking.Status == BookingStatus.Completed || booking.StartTime <= VnClock.Now)
             throw new BadRequestException("Không thể hủy booking đã hoàn thành hoặc đã bắt đầu.");
 
         booking.Status = BookingStatus.Cancelled;
         booking.CancellationReason = request.Reason;
-        booking.UpdatedAt = DateTime.UtcNow;
+        booking.UpdatedAt = VnClock.Now;
 
         await bookingsRepository.SaveChanges();
 
@@ -216,7 +219,7 @@ public class BookingsService(IBookingsRepository bookingsRepository,
 
         IEnumerable<WorkSchedule> shifts = await workSchedulesRepository.GetSchedulesAsync(staffId, date, date);
         return shifts.Any(s =>
-            s.WorkDate.ToDateTime(s.StartTime, DateTimeKind.Utc) <= start &&
-            end <= s.WorkDate.ToDateTime(s.EndTime, DateTimeKind.Utc));
+            s.WorkDate.ToDateTime(s.StartTime) <= start &&
+            end <= s.WorkDate.ToDateTime(s.EndTime));
     }
 }

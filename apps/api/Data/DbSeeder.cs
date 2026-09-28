@@ -1,3 +1,4 @@
+using API.Common;
 using API.Constraints;
 using API.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ public static class DbSeeder
         if (await db.Users.AnyAsync())
             return;
 
-        var now = DateTime.UtcNow;
+        var now = VnClock.Now;
         var users = new List<User>
         {
             new() { UserName = "admin", Email = "admin@booking.local", Role = UserRole.Admin, PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), IsActive = true, CreatedAt = now, UpdatedAt = now },
@@ -52,7 +53,7 @@ public static class DbSeeder
                     schedules.Add(new WorkSchedule
                     {
                         StaffId = staff.Id,
-                        WorkDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(day)),
+                        WorkDate = DateOnly.FromDateTime(VnClock.Now.AddDays(day)),
                         StartTime = TimeOnly.Parse(start),
                         EndTime = TimeOnly.Parse(end),
                         CreatedAt = now,
@@ -77,10 +78,10 @@ public static class DbSeeder
         };
         foreach (var (code, customer, service, staff, offset, start, status, note, reason) in seeds)
         {
-            var date = DateTime.UtcNow.AddDays(offset).Date;
+            var date = VnClock.Now.AddDays(offset).Date;
             var parts = start.Split(':');
             var startTime = new DateTime(date.Year, date.Month, date.Day,
-                int.Parse(parts[0]), int.Parse(parts[1]), 0, DateTimeKind.Utc);
+                int.Parse(parts[0]), int.Parse(parts[1]), 0, DateTimeKind.Unspecified);
             db.Bookings.Add(new Booking
             {
                 BookingCode = code,

@@ -58,7 +58,7 @@ public class ServicesService(IServicesRepository servicesRepository,
         Service service = await servicesRepository.GetById(request.Id) ?? throw new NotFoundException();
         
         mapper.Map(request, service);
-        service.UpdatedAt = DateTime.UtcNow;    
+        service.UpdatedAt = VnClock.Now;    
         
         await servicesRepository.SaveChanges();
     }
@@ -66,8 +66,8 @@ public class ServicesService(IServicesRepository servicesRepository,
     private Service CreateNewService(CreateNewServiceRequest request)
     {
         Service newService = mapper.Map<Service>(request);
-        newService.CreatedAt = DateTime.UtcNow;
-        newService.UpdatedAt = DateTime.UtcNow;
+        newService.CreatedAt = VnClock.Now;
+        newService.UpdatedAt = VnClock.Now;
         return newService;
     }
 }

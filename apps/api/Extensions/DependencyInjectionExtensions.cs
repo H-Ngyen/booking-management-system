@@ -23,7 +23,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<IServicesService, ServicesService>();
         services.AddScoped<IStaffsService, StaffsService>();
         services.AddScoped<IBookingsService, BookingsService>();
-        
+
 
         //Repository
         services.AddScoped<IUserRepository, UserRepository>();
@@ -37,6 +37,9 @@ public static class DependencyInjectionExtension
         services.AddScoped<IServicesAuthorization, ServicesAuthorization>();
         services.AddScoped<IStaffsAuthorization, StaffsAuthorization>();
         services.AddScoped<IBookingsAuthorization, BookingsAuthorization>();
+
+        // SignalR
+        services.AddSingleton<IBookingNotifier, BookingNotifier>();
 
         return services;
     }

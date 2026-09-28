@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import { ArrowLeft, CalendarDays, ConciergeBell, LogOut, Menu, ReceiptText } from 'lucide-react';
 import { ADMIN_NAV } from '@/lib/nav';
+import { useBookingRealtime } from '@/hooks';
 import { useAuthMe, useLogout } from '@/hooks/useAuth';
 import { cn } from '@/lib/cn';
 import { AuthGuard } from '@/components/auth-guard';
@@ -84,6 +85,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  useBookingRealtime();
   return (
     <AuthGuard>
       <AdminGuard>

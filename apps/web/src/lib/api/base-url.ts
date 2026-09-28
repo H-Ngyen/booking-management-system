@@ -22,3 +22,9 @@ export function getBaseUrl(): string {
   const serverDefault = process.env.NODE_ENV === 'development' ? DEV_API_URL : PRODUCTION_API_URL;
   return normalize(process.env.SERVER_API_URL, serverDefault);
 }
+
+// API origin without the /api prefix: SignalR hubs are mapped at the server
+// root (/hubs/bookings), not under /api/v1.
+export function getServerOrigin(): string {
+  return getBaseUrl().replace(/\/api$/, '');
+}

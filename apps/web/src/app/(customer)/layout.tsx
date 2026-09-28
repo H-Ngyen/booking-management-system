@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { CalendarPlus, LayoutGrid, LogOut, ReceiptText, ShieldCheck } from 'lucide-react';
 import { CUSTOMER_NAV } from '@/lib/nav';
+import { useBookingRealtime } from '@/hooks';
 import { useAuthMe, useLogout } from '@/hooks/useAuth';
 import { cn } from '@/lib/cn';
 import { AuthGuard } from '@/components/auth-guard';
@@ -74,6 +75,7 @@ function TopNav() {
 }
 
 export default function CustomerLayout({ children }: { children: ReactNode }) {
+  useBookingRealtime();
   return (
     <AuthGuard>
       <TopNav />

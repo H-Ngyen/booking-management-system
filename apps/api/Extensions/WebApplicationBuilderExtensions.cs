@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using API.Data;
 using API.Helpers;
+using API.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +15,14 @@ public static class WebApplicationBuilderExtensions
 {
     public static void AddPresentation(this WebApplicationBuilder builder)
     {
+        string connectionString = builder.Configuration.GetConnectionString("Default")
+            ?? throw new InvalidOperationException("Missing ConnectionStrings:Default");
+        string frontendOrigin = builder.Configuration["Frontend:Origin"] ?? "http://localhost:3000";
+
         builder.Services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+            options.UseNpgsql(connectionString));
+
+        builder.AddSignalRInfrastructure(frontendOrigin);
 
         builder.Services.AddAuthentication();
         builder.Services.AddControllers()
@@ -23,9 +30,6 @@ public static class WebApplicationBuilderExtensions
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
             .ConfigureApiBehaviorOptions(options =>
             {
-                // [ApiController] auto-400 returns ProblemDetails by default,
-                // which bypasses ErrorHandlingMiddleware. Unify it with the
-                // { message, code } envelope the frontend ApiError reads.
                 options.InvalidModelStateResponseFactory = context =>
                 {
                     var message = string.Join("; ",
@@ -48,8 +52,21 @@ public static class WebApplicationBuilderExtensions
                     ValidateAudience = false,
                     ClockSkew = TimeSpan.FromMinutes(2),
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
-        
+
         builder.Services.AddSwaggerGen(cfg =>
         {
             cfg.AddSecurityDefinition("bearerAuth", new OpenApiSecurityScheme
@@ -70,6 +87,7 @@ public static class WebApplicationBuilderExtensions
             });
 
             cfg.OperationFilter<AppendAuthorizeToSummaryOperationFilter>();
+            cfg.DocumentFilter<BookingHubDocumentFilter>();
         });
 
         builder.Services.AddEndpointsApiExplorer();

@@ -3,6 +3,7 @@ using API.Constraints;
 using API.DTOs;
 using API.Entities;
 using API.Exceptions;
+using API.Hubs;
 using API.Interfaces;
 using API.Interfaces.Authorization;
 using API.Interfaces.Repositories;
@@ -18,7 +19,8 @@ public class BookingsService(IBookingsRepository bookingsRepository,
     IMapper mapper,
     IUserContext userContext,
     IUserRepository userRepository,
-    IBookingsAuthorization bookingsAuthorization) : IBookingsService
+    IBookingsAuthorization bookingsAuthorization,
+    IBookingNotifier notifier) : IBookingsService
 {
     private const int SlotStepMinutes = 15;
 
@@ -130,6 +132,8 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         newBooking = await bookingsRepository.CreateBookingAsync(newBooking)
             ?? throw new ConflictException("Khung giờ này vừa có người đặt. Vui lòng chọn khung giờ khác.");
 
+        await notifier.NotifyBookingChangedAsync(newBooking.Id, newBooking.CustomerId, BookingChangeTypes.Created);
+
         return mapper.Map<BookingDto>(newBooking);
     }
 
@@ -172,6 +176,8 @@ public class BookingsService(IBookingsRepository bookingsRepository,
 
         await bookingsRepository.SaveChanges();
 
+        await notifier.NotifyBookingChangedAsync(booking.Id, booking.CustomerId, BookingChangeTypes.StatusChanged);
+
         var result = mapper.Map<BookingDto>(booking);
         return result;
     }
@@ -196,6 +202,8 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         booking.UpdatedAt = DateTime.UtcNow;
 
         await bookingsRepository.SaveChanges();
+
+        await notifier.NotifyBookingChangedAsync(booking.Id, booking.CustomerId, BookingChangeTypes.Cancelled);
 
         return mapper.Map<BookingDto>(booking);
     }

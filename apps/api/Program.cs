@@ -21,13 +21,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-if(app.Environment.IsDevelopment() || true)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+if(app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// CORS policy "web" (registered in SignalRExtensions): order matters, keep visible here.
+app.UseCors("web");
 
 app.UseAuthentication();
 
@@ -35,4 +41,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapSignalRHubs();
+
 app.Run();
+
+public partial class Program { }

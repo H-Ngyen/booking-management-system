@@ -63,20 +63,36 @@ public static class DbSeeder
         await db.SaveChangesAsync();
 
         var durations = services.ToDictionary(s => s.Id, s => s.DurationMinutes);
-        var seeds = new (string Code, int Customer, int Service, int Staff, int DayOffset, string Start, BookingStatus Status, string? Note, string? Reason)[]
+        // Booking codes mirror GenerateBookingCodeAsync: BK-YYYYMMDD-XXXXXX.
+        // Fixed Random seed keeps demo data identical on every fresh seed.
+        var codeRandom = new Random(42);
+        const string codeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        var usedCodes = new HashSet<string>();
+        string NewCode(DateTime start)
         {
-            ("BK-PAST-0001", users[1].Id, services[0].Id, staffs[0].Id, -3, "09:00", BookingStatus.Completed, "Cắt ngắn hai bên", null),
-            ("BK-PAST-0002", users[2].Id, services[3].Id, staffs[1].Id, -1, "14:00", BookingStatus.Completed, null, null),
-            ("BK-FUT-0003", users[1].Id, services[0].Id, staffs[0].Id, 0, "10:30", BookingStatus.Confirmed, null, null),
-            ("BK-FUT-0004", users[1].Id, services[1].Id, staffs[1].Id, 1, "09:00", BookingStatus.Pending, "Gội nhẹ nhàng", null),
-            ("BK-FUT-0005", users[2].Id, services[2].Id, staffs[0].Id, 1, "13:30", BookingStatus.Pending, null, null),
-            ("BK-FUT-0006", users[1].Id, services[3].Id, staffs[1].Id, 2, "15:00", BookingStatus.Confirmed, null, null),
-            ("BK-FUT-0007", users[2].Id, services[0].Id, staffs[1].Id, 3, "08:30", BookingStatus.Pending, null, null),
-            ("BK-CNCL-0008", users[1].Id, services[1].Id, staffs[0].Id, 1, "15:30", BookingStatus.Cancelled, null, "Bận đột xuất"),
-            ("BK-CNCL-0009", users[2].Id, services[3].Id, staffs[0].Id, -2, "10:00", BookingStatus.Cancelled, null, "Đổi sang hôm khác"),
-            ("BK-FUT-0010", users[1].Id, services[2].Id, staffs[1].Id, 4, "13:30", BookingStatus.Confirmed, "Màu nâu hạt dẻ", null),
+            string code;
+            do
+            {
+                var suffix = new string(Enumerable.Range(0, 6)
+                    .Select(_ => codeChars[codeRandom.Next(codeChars.Length)]).ToArray());
+                code = $"BK-{start:yyyyMMdd}-{suffix}";
+            } while (!usedCodes.Add(code));
+            return code;
+        }
+        var seeds = new (int Customer, int Service, int Staff, int DayOffset, string Start, BookingStatus Status, string? Note, string? Reason)[]
+        {
+            (users[1].Id, services[0].Id, staffs[0].Id, -3, "09:00", BookingStatus.Completed, "Cắt ngắn hai bên", null),
+            (users[2].Id, services[3].Id, staffs[1].Id, -1, "14:00", BookingStatus.Completed, null, null),
+            (users[1].Id, services[0].Id, staffs[0].Id, 0, "10:30", BookingStatus.Confirmed, null, null),
+            (users[1].Id, services[1].Id, staffs[1].Id, 1, "09:00", BookingStatus.Pending, "Gội nhẹ nhàng", null),
+            (users[2].Id, services[2].Id, staffs[0].Id, 1, "13:30", BookingStatus.Pending, null, null),
+            (users[1].Id, services[3].Id, staffs[1].Id, 2, "15:00", BookingStatus.Confirmed, null, null),
+            (users[2].Id, services[0].Id, staffs[1].Id, 3, "08:30", BookingStatus.Pending, null, null),
+            (users[1].Id, services[1].Id, staffs[0].Id, 1, "15:30", BookingStatus.Cancelled, null, "Bận đột xuất"),
+            (users[2].Id, services[3].Id, staffs[0].Id, -2, "10:00", BookingStatus.Cancelled, null, "Đổi sang hôm khác"),
+            (users[1].Id, services[2].Id, staffs[1].Id, 4, "13:30", BookingStatus.Confirmed, "Màu nâu hạt dẻ", null),
         };
-        foreach (var (code, customer, service, staff, offset, start, status, note, reason) in seeds)
+        foreach (var (customer, service, staff, offset, start, status, note, reason) in seeds)
         {
             var date = VnClock.Now.AddDays(offset).Date;
             var parts = start.Split(':');
@@ -84,7 +100,7 @@ public static class DbSeeder
                 int.Parse(parts[0]), int.Parse(parts[1]), 0, DateTimeKind.Unspecified);
             db.Bookings.Add(new Booking
             {
-                BookingCode = code,
+                BookingCode = NewCode(startTime),
                 CustomerId = customer,
                 ServiceId = service,
                 StaffId = staff,

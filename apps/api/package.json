@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotnet watch run --project ./api.csproj --launch-profile http",
-    "build": "dotnet build ./api.csproj",
-    "typecheck": "dotnet build ./api.csproj --no-restore",
-    "lint": "dotnet build ./api.csproj --no-restore"
+    "dev": "dotnet watch run --project ./src/api.csproj --launch-profile http",
+    "build": "dotnet build ./src/api.csproj",
+    "typecheck": "dotnet build ./src/api.csproj --no-restore",
+    "lint": "dotnet build ./src/api.csproj --no-restore"
   }
 }

@@ -167,7 +167,7 @@ export default function MyBookingsPage() {
               <Button type="button" variant="outline" onClick={() => setCancelId(null)}>
                 Đóng
               </Button>
-              <Button type="submit" variant="destructive" loading={cancelBooking.isPending}>
+              <Button type="submit" variant="destructive" loading={cancelBooking.isPending} disabled={!reason.trim()}>
                 Xác nhận hủy
               </Button>
             </DialogFooter>

@@ -43,6 +43,7 @@ export default function AdminServicesPage() {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<ServiceFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const debouncedSearch = useDebouncedValue(search);
   const { data, isLoading, isError, error, refetch } = useServices({
@@ -105,17 +106,22 @@ export default function AdminServicesPage() {
   };
 
   const toggleActive = (service: ServiceItem) => {
-    // Backend update requires the full object: resend current values.
-    updateService.mutate({
-      id: service.id,
-      input: {
-        name: service.name,
-        description: service.description ?? null,
-        durationMinutes: service.durationMinutes,
-        price: service.price,
-        isActive: !service.isActive,
+    // One toggle at a time; the acting row spins, the rest lock to avoid races.
+    if (togglingId != null) return;
+    setTogglingId(service.id);
+    updateService.mutate(
+      {
+        id: service.id,
+        input: {
+          name: service.name,
+          description: service.description ?? null,
+          durationMinutes: service.durationMinutes,
+          price: service.price,
+          isActive: !service.isActive,
+        },
       },
-    });
+      { onSettled: () => setTogglingId(null) },
+    );
   };
 
   return (
@@ -125,8 +131,8 @@ export default function AdminServicesPage() {
           <h1 className="text-xl font-bold text-ink">Quản lý dịch vụ</h1>
           <p className="text-sm text-ink-3">Thêm, cập nhật, khóa hoặc mở lại dịch vụ.</p>
         </div>
-        <div className="flex gap-2">
-          <div className="relative">
+        <div className="flex w-full gap-2 sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-4" />
             <Input
               value={search}
@@ -136,7 +142,7 @@ export default function AdminServicesPage() {
               }}
               placeholder="Tìm kiếm…"
               aria-label="Tìm kiếm dịch vụ"
-              className="w-56 pl-9"
+              className="w-full pl-9 sm:w-56"
             />
           </div>
           <Button onClick={openCreate}>
@@ -168,7 +174,7 @@ export default function AdminServicesPage() {
                   <TableCell>{s.durationMinutes} phút</TableCell>
                   <TableCell>{s.price.toLocaleString('vi-VN')}đ</TableCell>
                   <TableCell>
-                    <Badge variant={s.isActive ? 'secondary' : 'outline'}>
+                    <Badge variant={s.isActive ? 'default' : 'destructive'}>
                       {s.isActive ? 'Đang mở' : 'Đã khóa'}
                     </Badge>
                   </TableCell>
@@ -178,7 +184,13 @@ export default function AdminServicesPage() {
                         <Pencil />
                         Sửa
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => toggleActive(s)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleActive(s)}
+                        loading={togglingId === s.id}
+                        disabled={togglingId != null}
+                      >
                         {s.isActive ? 'Khóa' : 'Mở lại'}
                       </Button>
                     </div>

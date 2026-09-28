@@ -32,7 +32,7 @@ export default function ServicesPage() {
           <h1 className="text-xl font-bold text-ink">Dịch vụ</h1>
           <p className="text-sm text-ink-3">Chọn dịch vụ và đặt lịch với nhân viên bạn muốn.</p>
         </div>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-4" />
           <Input
             value={search}
@@ -42,7 +42,7 @@ export default function ServicesPage() {
             }}
             placeholder="Tìm kiếm dịch vụ…"
             aria-label="Tìm kiếm dịch vụ"
-            className="w-64 pl-9"
+            className="w-full pl-9 sm:w-64"
           />
         </div>
       </div>

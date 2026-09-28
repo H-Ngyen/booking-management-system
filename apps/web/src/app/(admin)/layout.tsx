@@ -74,7 +74,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
         <p className="hidden text-sm font-semibold text-ink lg:block">Bảng quản trị</p>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-sm text-ink-3">{me?.userName} (Admin)</span>
+        <span className="hidden text-sm text-ink-3 sm:block">{me?.userName} (Admin)</span>
         <Button variant="ghost" size="sm" onClick={handleLogout}>
           <LogOut />
           Đăng xuất

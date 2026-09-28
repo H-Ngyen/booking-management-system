@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useAuthMe, useLogin } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/error-messages';
-import { DEMO_ACCOUNTS } from '@/lib/mock/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError } from '@/components/ui/field';
@@ -47,12 +46,6 @@ export default function LoginPage() {
     );
   };
 
-  const fillDemo = (name: string, pw: string) => {
-    setUserName(name);
-    setPassword(pw);
-    setFormError('');
-  };
-
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-4">
@@ -86,31 +79,6 @@ export default function LoginPage() {
                 Đăng nhập
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Tài khoản demo</CardTitle>
-            <CardDescription>Bấm để điền nhanh tài khoản demo.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {DEMO_ACCOUNTS.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => fillDemo(a.userName, a.password)}
-                className="flex w-full items-center justify-between rounded-lg border border-line bg-surface px-3 py-2 text-left text-sm hover:bg-surface-2"
-              >
-                <span>
-                  <span className="font-mono font-semibold text-ink">{a.userName}</span>
-                  <span className="text-ink-3"> / {a.password}</span>
-                </span>
-                <span className="rounded-full bg-surface-3 px-2 py-0.5 text-xs font-semibold text-primary">
-                  {a.role}
-                </span>
-              </button>
-            ))}
           </CardContent>
         </Card>
       </div>

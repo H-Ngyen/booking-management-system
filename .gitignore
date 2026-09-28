@@ -43,7 +43,10 @@ next-env.d.ts
 .turbo
 *.pdf
 
+# .NET build output
+[Bb]in/
+[Oo]bj/
+
 # Test artifacts (coverage XML regenerates on every test run)
 TestResults/
 TestReport.md
-api.Tests*

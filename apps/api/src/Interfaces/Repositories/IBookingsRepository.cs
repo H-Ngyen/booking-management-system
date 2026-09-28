@@ -16,5 +16,6 @@ public interface IBookingsRepository
     /// end) and returns the affected (booking, customer) ids for notification.
     /// </summary>
     Task<List<(int BookingId, int CustomerId)>> CancelOverdueBookingsAsync(DateTime utcNow, string reason);
+    Task<bool> HasOverlapAsync(Booking entity);
     Task SaveChanges();
 }

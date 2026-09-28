@@ -42,6 +42,7 @@ export default function AdminStaffsPage() {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<StaffFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const debouncedSearch = useDebouncedValue(search);
   const { data, isLoading, isError, error, refetch } = useStaffs(false, {
@@ -94,10 +95,16 @@ export default function AdminStaffsPage() {
   };
 
   const toggleActive = (staff: Staff) => {
-    updateStaff.mutate({
-      id: staff.id,
-      input: { fullName: staff.fullName, email: staff.email, isActive: !staff.isActive },
-    });
+    // One toggle at a time; the acting row spins, the rest lock to avoid races.
+    if (togglingId != null) return;
+    setTogglingId(staff.id);
+    updateStaff.mutate(
+      {
+        id: staff.id,
+        input: { fullName: staff.fullName, email: staff.email, isActive: !staff.isActive },
+      },
+      { onSettled: () => setTogglingId(null) },
+    );
   };
 
   return (
@@ -107,8 +114,8 @@ export default function AdminStaffsPage() {
           <h1 className="text-xl font-bold text-ink">Quản lý nhân viên</h1>
           <p className="text-sm text-ink-3">Thêm, cập nhật, khóa hoặc mở lại nhân viên. Nhân viên bị khóa không nhận booking mới.</p>
         </div>
-        <div className="flex gap-2">
-          <div className="relative">
+        <div className="flex w-full gap-2 sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-4" />
             <Input
               value={search}
@@ -118,7 +125,7 @@ export default function AdminStaffsPage() {
               }}
               placeholder="Tìm kiếm…"
               aria-label="Tìm kiếm nhân viên"
-              className="w-56 pl-9"
+              className="w-full pl-9 sm:w-56"
             />
           </div>
           <Button onClick={openCreate}>
@@ -148,7 +155,7 @@ export default function AdminStaffsPage() {
                   <TableCell className="font-semibold">{s.fullName}</TableCell>
                   <TableCell>{s.email}</TableCell>
                   <TableCell>
-                    <Badge variant={s.isActive ? 'secondary' : 'outline'}>
+                    <Badge variant={s.isActive ? 'default' : 'destructive'}>
                       {s.isActive ? 'Đang làm' : 'Đã khóa'}
                     </Badge>
                   </TableCell>
@@ -158,7 +165,13 @@ export default function AdminStaffsPage() {
                         <Pencil />
                         Sửa
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => toggleActive(s)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleActive(s)}
+                        loading={togglingId === s.id}
+                        disabled={togglingId != null}
+                      >
                         {s.isActive ? 'Khóa' : 'Mở lại'}
                       </Button>
                     </div>

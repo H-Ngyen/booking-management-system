@@ -23,8 +23,8 @@ function todayISO(): string {
 function BookingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: services } = useServices({ pageSize: 100 });
-  const { data: staffs } = useStaffs();
+  const { data: services, error: servicesError } = useServices({ pageSize: 100 });
+  const { data: staffs, error: staffsError } = useStaffs();
   const createBooking = useCreateBooking();
 
   const [serviceId, setServiceId] = useState<number | null>(() => {
@@ -37,7 +37,7 @@ function BookingForm() {
   const [note, setNote] = useState('');
   const [formError, setFormError] = useState('');
 
-  const { data: slots, isLoading: slotsLoading } = useAvailableSlots(serviceId, staffId, date);
+  const { data: slots, isLoading: slotsLoading, error: slotsError } = useAvailableSlots(serviceId, staffId, date);
   const selectedService = useMemo(
     () => services?.items.find((s) => s.id === serviceId),
     [services, serviceId],
@@ -72,7 +72,7 @@ function BookingForm() {
           <CardTitle>1. Chọn dịch vụ</CardTitle>
         </CardHeader>
         <CardContent>
-          <Field label="Dịch vụ">
+          <Field label="Dịch vụ" error={servicesError ? getErrorMessage(servicesError) : undefined}>
             <Select
               value={serviceId ? String(serviceId) : ''}
               onValueChange={(v) => {
@@ -103,7 +103,7 @@ function BookingForm() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nhân viên">
+            <Field label="Nhân viên" error={staffsError ? getErrorMessage(staffsError) : undefined}>
               <Select
                 value={staffId ? String(staffId) : ''}
                 onValueChange={(v) => {
@@ -138,6 +138,9 @@ function BookingForm() {
           </div>
 
           {slotsLoading && <Spinner label="Đang tải khung giờ trống…" />}
+          {slotsError && !slotsLoading && (
+            <p className="text-sm text-destructive">{getErrorMessage(slotsError)}</p>
+          )}
           {slots && slots.length === 0 && (
             <p className="text-sm text-ink-3">Ngày này không còn khung giờ trống. Hãy chọn ngày khác.</p>
           )}

@@ -57,21 +57,22 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
         if (staff == null)
             throw new InvalidOperationException($"Staff {entity.StaffId} not found during booking.");
 
-        bool hasOverlap = await NoTrackingQuery.AnyAsync(b =>
-            b.StaffId == entity.StaffId &&
-            b.Status != BookingStatus.Cancelled &&
-            b.StartTime < entity.EndTime && b.EndTime > entity.StartTime);
-
+        bool hasOverlap = await HasOverlapAsync(entity);
         if (hasOverlap) return null;
 
         _dbContext.Bookings.Add(entity);
-
         await SaveChanges();
 
         await transaction.CommitAsync();
 
         return entity;
     }
+
+    public async Task<bool> HasOverlapAsync(Booking entity)
+        => await NoTrackingQuery.AnyAsync(b =>
+            b.StaffId == entity.StaffId &&
+            b.Status != BookingStatus.Cancelled &&
+            b.StartTime < entity.EndTime && b.EndTime > entity.StartTime);
 
     public async Task<bool> ExistsByCodeAsync(string bookingCode)
         => await NoTrackingQuery.AnyAsync(b => b.BookingCode == bookingCode);

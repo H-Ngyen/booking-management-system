@@ -43,6 +43,14 @@ export default function AdminBookingsPage() {
   });
   const updateStatus = useUpdateBookingStatus();
   const cancelBooking = useCancelBooking();
+  const [actingId, setActingId] = useState<number | null>(null);
+
+  const changeStatus = (id: number, status: BookingStatus) => {
+    // One status change at a time; only the acting row spins.
+    if (actingId != null) return;
+    setActingId(id);
+    updateStatus.mutate({ id, status }, { onSettled: () => setActingId(null) });
+  };
 
   const handleCancel = (e: FormEvent) => {
     e.preventDefault();
@@ -129,8 +137,9 @@ export default function AdminBookingsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => updateStatus.mutate({ id: b.id, status: 'Confirmed' })}
-                          loading={updateStatus.isPending}
+                          onClick={() => changeStatus(b.id, 'Confirmed')}
+                          loading={actingId === b.id}
+                          disabled={actingId != null}
                         >
                           Xác nhận
                         </Button>
@@ -139,8 +148,9 @@ export default function AdminBookingsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => updateStatus.mutate({ id: b.id, status: 'Completed' })}
-                          loading={updateStatus.isPending}
+                          onClick={() => changeStatus(b.id, 'Completed')}
+                          loading={actingId === b.id}
+                          disabled={actingId != null}
                         >
                           Hoàn thành
                         </Button>
@@ -186,7 +196,12 @@ export default function AdminBookingsPage() {
               <Button type="button" variant="outline" onClick={() => setCancelId(null)}>
                 Đóng
               </Button>
-              <Button type="submit" variant="destructive" loading={cancelBooking.isPending}>
+              <Button
+                type="submit"
+                variant="destructive"
+                loading={cancelBooking.isPending}
+                disabled={!reason.trim()}
+              >
                 Xác nhận hủy
               </Button>
             </DialogFooter>

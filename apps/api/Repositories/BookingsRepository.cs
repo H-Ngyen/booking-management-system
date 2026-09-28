@@ -36,8 +36,14 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
     {
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
-        string lockKey = $"booking:{entity.StaffId}:{entity.StartTime:yyyy-MM-dd}";
-        await _dbContext.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtext({lockKey}))");
+        // Row-level lock on the parent Staff row serializes check+insert per
+        // staff. The conflicting booking row may not exist yet (phantom),
+        // so the existing parent row is the lock representative.
+        Staff? staff = await _dbContext.Staffs
+            .FromSqlInterpolated($"SELECT * FROM \"Staffs\" WHERE \"Id\" = {entity.StaffId} FOR UPDATE")
+            .FirstOrDefaultAsync();
+        if (staff == null)
+            throw new InvalidOperationException($"Staff {entity.StaffId} not found during booking.");
 
         bool hasOverlap = await NoTrackingQuery.AnyAsync(b =>
             b.StaffId == entity.StaffId &&

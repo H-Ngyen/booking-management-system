@@ -32,7 +32,7 @@ public class CreateNewServiceRequest
 
 public class UpdateServiceRequest
 {
-    [Range(1, int.MaxValue, ErrorMessage = "Id không hợp lệ.")]
+    [Range(0, int.MaxValue, ErrorMessage = "Id không hợp lệ.")]
     public int Id { get; set; }
 
     [Required(ErrorMessage = "Tên dịch vụ là bắt buộc.")]

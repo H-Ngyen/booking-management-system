@@ -28,7 +28,7 @@ public class CreateNewStaffRequest
 
 public class UpdateStaffRequest
 {
-    [Range(1, int.MaxValue, ErrorMessage = "Id không hợp lệ.")]
+    [Range(0, int.MaxValue, ErrorMessage = "Id không hợp lệ")]
     public int Id { get; set; }
 
     [Required(ErrorMessage = "Tên nhân viên là bắt buộc.")]

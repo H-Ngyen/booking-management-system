@@ -21,11 +21,6 @@ public class WorkSchedulesRepository(DataContext context) : BaseRepository<WorkS
 
     public async Task<WorkSchedule?> CreateScheduleAsync(WorkSchedule entity)
     {
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-        string lockKey = $"workschedule:{entity.StaffId}:{entity.WorkDate:yyyy-MM-dd}";
-        await _dbContext.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtext({lockKey}))");
-
         bool hasOverlap = await HasOverlappingScheduleAsync(
             entity.StaffId,
             entity.WorkDate,
@@ -37,8 +32,6 @@ public class WorkSchedulesRepository(DataContext context) : BaseRepository<WorkS
         _dbContext.WorkSchedules.Add(entity);
 
         await SaveChanges();
-
-        await transaction.CommitAsync();
 
         return entity;
     }

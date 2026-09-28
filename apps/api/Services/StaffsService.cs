@@ -29,7 +29,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
 
         bool isStaffExisting = await staffsRepository.ExistsByEmailAsync(request.Email);
         if (isStaffExisting)
-            throw new ConflictException("Email nhân viên đã tồn tại.");
+            throw new ConflictException("Email nhân viên đã tồn tại.", "STAFF_EMAIL_EXISTS");
 
         Staff newStaff = CreateNewStaff(request);
         newStaff = await staffsRepository.CreateAsync(newStaff) ?? throw new BadRequestException();
@@ -65,7 +65,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
 
         bool isExisting = await staffsRepository.ExistsByEmailAsync(request.Email, request.Id);
         if (isExisting)
-            throw new ConflictException("Email nhân viên đã tồn tại.");
+            throw new ConflictException("Email nhân viên đã tồn tại.", "STAFF_EMAIL_EXISTS");
 
         mapper.Map(request, staff);
         staff.UpdatedAt = VnClock.Now;
@@ -79,7 +79,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
         User user = await userRepository.GetUserById(currentUser.Id) ?? throw new ForbidException();
 
         bool isExisting = await staffsRepository.ExistsById(staffId);
-        if (!isExisting) throw new NotFoundException("Không tìm thấy nhân viên");
+        if (!isExisting) throw new NotFoundException("Không tìm thấy nhân viên", "STAFF_NOT_FOUND");
 
         if (!staffsAuthorization.Authorize(user, ResourceOperation.Read))
             throw new ForbidException();
@@ -95,7 +95,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
         CurrentUser currentUser = userContext.GetCurrentUser();
         User user = await userRepository.GetUserById(currentUser.Id) ?? throw new ForbidException();
 
-        Staff staff = await staffsRepository.GetById(staffId) ?? throw new NotFoundException("Không tìm thấy nhân viên.");
+        Staff staff = await staffsRepository.GetById(staffId) ?? throw new NotFoundException("Không tìm thấy nhân viên.", "STAFF_NOT_FOUND");
 
         if (!staffsAuthorization.Authorize(user, ResourceOperation.Create, staff))
             throw new ForbidException();
@@ -112,7 +112,7 @@ public class StaffsService(IStaffsRepository staffsRepository,
         });
 
         if (schedule == null)
-            throw new ConflictException("Ca làm việc bị trùng với ca đã có của nhân viên này.");
+            throw new ConflictException("Ca làm việc bị trùng với ca đã có của nhân viên này.", "SCHEDULE_OVERLAP");
 
         var result = mapper.Map<WorkScheduleDto>(schedule);
         return result;
@@ -125,17 +125,17 @@ public class StaffsService(IStaffsRepository staffsRepository,
 
         bool isExisting = await staffsRepository.ExistsById(staffId);
         if (!isExisting)
-            throw new NotFoundException("Không tìm thấy nhân viên.");
+            throw new NotFoundException("Không tìm thấy nhân viên.", "STAFF_NOT_FOUND");
 
         if (!staffsAuthorization.Authorize(user, ResourceOperation.Delete))
             throw new ForbidException();
 
         WorkSchedule? schedule = await workSchedulesRepository.GetScheduleById(scheduleId);
         if (schedule == null || schedule.StaffId != staffId)
-            throw new NotFoundException("Không tìm thấy ca làm việc.");
+            throw new NotFoundException("Không tìm thấy ca làm việc.", "SCHEDULE_NOT_FOUND");
 
         if (await bookingsRepository.HasActiveBookingsAsync(staffId, schedule.WorkDate, schedule.StartTime, schedule.EndTime))
-            throw new ConflictException("Không thể xóa ca làm việc đã có booking.");
+            throw new ConflictException("Không thể xóa ca làm việc đã có booking.", "SCHEDULE_HAS_BOOKINGS");
 
         await workSchedulesRepository.DeleteSchedule(schedule);
     }

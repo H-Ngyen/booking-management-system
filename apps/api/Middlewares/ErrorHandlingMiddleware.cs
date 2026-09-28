@@ -13,7 +13,8 @@ public class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger) : 
         catch (ApiException ex)
         {
             context.Response.StatusCode = ex.StatusCode;
-            await context.Response.WriteAsync(ex.Message);
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { message = ex.Message, code = ex.Code });
 
             logger.LogWarning(ex.Message);
         }
@@ -22,7 +23,8 @@ public class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger) : 
             logger.LogError(ex ,ex.Message);
 
             context.Response.StatusCode = 500;
-            await context.Response.WriteAsync("Something went wrong");
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { message = "Something went wrong", code = "INTERNAL_ERROR" });
         }
     }
 }

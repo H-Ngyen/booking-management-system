@@ -17,11 +17,11 @@ public class AuthService(
     public async Task<string> Login(LoginRequest request)
     {
         User? user = await userRepository.GetUserByUserName(request.UserName)
-            ?? throw new UnauthorizedException("Tên người dùng hoặc mật khẩu không hợp lệ");
+            ?? throw new UnauthorizedException("Tên người dùng hoặc mật khẩu không hợp lệ", "INVALID_CREDENTIALS");
         
         bool isVerify = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
         if(!isVerify) 
-            throw new UnauthorizedException("Tên người dùng hoặc mật khẩu không hợp lệ");
+            throw new UnauthorizedException("Tên người dùng hoặc mật khẩu không hợp lệ", "INVALID_CREDENTIALS");
 
         CurrentUser currentUser = mapper.Map<CurrentUser>(user);
         string token = tokenService.CreateToken(currentUser);
@@ -33,7 +33,7 @@ public class AuthService(
     {
         CurrentUser currentUser = userContext.GetCurrentUser();
         User? user = await userRepository.GetUserById(currentUser.Id) 
-            ?? throw new NotFoundException("Không tìm thấy người dùng");
+            ?? throw new NotFoundException("Không tìm thấy người dùng", "USER_NOT_FOUND");
 
         UserDto result = mapper.Map<UserDto>(user); 
         return result; 

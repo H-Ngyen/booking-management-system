@@ -62,8 +62,8 @@ public class BookingsService(IBookingsRepository bookingsRepository,
 
     public async Task<IEnumerable<string>> GetAvailableSlots(GetAvailableSlotsRequest request)
     {
-        Service service = await servicesRepository.GetById(request.ServiceId) ?? throw new NotFoundException("Không tìm thấy dịch vụ.");
-        Staff staff = await staffsRepository.GetById(request.StaffId) ?? throw new NotFoundException("Không tìm thấy nhân viên.");
+        Service service = await servicesRepository.GetById(request.ServiceId) ?? throw new NotFoundException("Không tìm thấy dịch vụ.", "SERVICE_NOT_FOUND");
+        Staff staff = await staffsRepository.GetById(request.StaffId) ?? throw new NotFoundException("Không tìm thấy nhân viên.", "STAFF_NOT_FOUND");
         if(!service.IsActive || !staff.IsActive)
             return [];
 
@@ -99,23 +99,23 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         if(!bookingsAuthorization.Authorize(user, ResourceOperation.Create))
             throw new ForbidException();
 
-        Service service = await servicesRepository.GetById(request.ServiceId) ?? throw new NotFoundException("Không tìm thấy dịch vụ.");
+        Service service = await servicesRepository.GetById(request.ServiceId) ?? throw new NotFoundException("Không tìm thấy dịch vụ.", "SERVICE_NOT_FOUND");
         if(!service.IsActive)
-            throw new BadRequestException("Dịch vụ này hiện đang tạm khóa.");
+            throw new BadRequestException("Dịch vụ này hiện đang tạm khóa.", "SERVICE_INACTIVE");
 
-        Staff staff = await staffsRepository.GetById(request.StaffId) ?? throw new NotFoundException("Không tìm thấy nhân viên.");
+        Staff staff = await staffsRepository.GetById(request.StaffId) ?? throw new NotFoundException("Không tìm thấy nhân viên.", "STAFF_NOT_FOUND");
         if(!staff.IsActive)
-            throw new BadRequestException("Nhân viên này hiện đang tạm nghỉ.");
+            throw new BadRequestException("Nhân viên này hiện đang tạm nghỉ.", "STAFF_INACTIVE");
 
         // Frontend sends VN wall time (no offset). Force Unspecified kind so the
         // value is stored/compared as wall time, never shifted.
         DateTime start = DateTime.SpecifyKind(request.StartTime!.Value, DateTimeKind.Unspecified);
         if(start <= VnClock.Now)
-            throw new BadRequestException("Không thể đặt lịch trong quá khứ.");
+            throw new BadRequestException("Không thể đặt lịch trong quá khứ.", "BOOKING_IN_PAST");
 
         DateTime end = start.AddMinutes(service.DurationMinutes);
         if(!await IsWithinWorkingHours(request.StaffId, start, end))
-            throw new BadRequestException("Khung giờ nằm ngoài giờ làm việc của nhân viên.");
+            throw new BadRequestException("Khung giờ nằm ngoài giờ làm việc của nhân viên.", "OUTSIDE_WORKING_HOURS");
 
         DateTime now = VnClock.Now;
         Booking newBooking = new()
@@ -133,7 +133,7 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         };
 
         newBooking = await bookingsRepository.CreateBookingAsync(newBooking)
-            ?? throw new ConflictException("Khung giờ này vừa có người đặt. Vui lòng chọn khung giờ khác.");
+            ?? throw new ConflictException("Khung giờ này vừa có người đặt. Vui lòng chọn khung giờ khác.", "BOOKING_CONFLICT");
 
         await notifier.NotifyBookingChangedAsync(newBooking.Id, newBooking.CustomerId, BookingChangeTypes.Created);
 
@@ -157,7 +157,7 @@ public class BookingsService(IBookingsRepository bookingsRepository,
                 return code;
         }
 
-        throw new BadRequestException("Không thể tạo mã booking, vui lòng thử lại.");
+        throw new BadRequestException("Không thể tạo mã booking, vui lòng thử lại.", "BOOKING_CODE_FAILED");
     }
 
     public async Task<BookingDto> UpdateStatus(int id, UpdateBookingStatusRequest request)
@@ -165,7 +165,7 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         CurrentUser currentUser = userContext.GetCurrentUser();
         User user = await userRepository.GetUserById(currentUser.Id) ?? throw new ForbidException();
 
-        Booking booking = await bookingsRepository.GetById(id) ?? throw new NotFoundException("Không tìm thấy booking.");
+        Booking booking = await bookingsRepository.GetById(id) ?? throw new NotFoundException("Không tìm thấy booking.", "BOOKING_NOT_FOUND");
 
         if(!bookingsAuthorization.Authorize(user, ResourceOperation.Update, booking))
             throw new ForbidException();
@@ -178,7 +178,7 @@ public class BookingsService(IBookingsRepository bookingsRepository,
             _ => false,
         };
         if(!allowed)
-            throw new BadRequestException($"Không thể chuyển từ {booking.Status} sang {target}.");
+            throw new BadRequestException($"Không thể chuyển từ {booking.Status} sang {target}.", "STATUS_TRANSITION");
 
         booking.Status = target;
         booking.UpdatedAt = VnClock.Now;
@@ -196,15 +196,15 @@ public class BookingsService(IBookingsRepository bookingsRepository,
         CurrentUser currentUser = userContext.GetCurrentUser();
         User user = await userRepository.GetUserById(currentUser.Id) ?? throw new ForbidException();
 
-        Booking booking = await bookingsRepository.GetById(id) ?? throw new NotFoundException("Không tìm thấy booking.");
+        Booking booking = await bookingsRepository.GetById(id) ?? throw new NotFoundException("Không tìm thấy booking.", "BOOKING_NOT_FOUND");
 
         if(!bookingsAuthorization.Authorize(user, ResourceOperation.Delete, booking))
             throw new ForbidException();
 
         if(booking.Status == BookingStatus.Cancelled)
-            throw new BadRequestException("Booking này đã bị hủy trước đó.");
+            throw new BadRequestException("Booking này đã bị hủy trước đó.", "ALREADY_CANCELLED");
         if(booking.Status == BookingStatus.Completed || booking.StartTime <= VnClock.Now)
-            throw new BadRequestException("Không thể hủy booking đã hoàn thành hoặc đã bắt đầu.");
+            throw new BadRequestException("Không thể hủy booking đã hoàn thành hoặc đã bắt đầu.", "CANNOT_CANCEL_STARTED");
 
         booking.Status = BookingStatus.Cancelled;
         booking.CancellationReason = request.Reason;

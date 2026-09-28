@@ -1,5 +1,6 @@
 import type { BookingListParams } from '@/lib/api/modules/bookings';
 import type { ServiceListParams } from '@/lib/api/modules/services';
+import type { StaffListParams } from '@/lib/api/modules/staffs';
 import type { BookingStatus } from '@/lib/types';
 
 export const authKeys = {
@@ -13,7 +14,8 @@ export const serviceKeys = {
 
 export const staffKeys = {
   all: ['staffs'] as const,
-  list: () => [...staffKeys.all, 'list'] as const,
+  list: (params?: StaffListParams & { activeOnly?: boolean }) =>
+    [...staffKeys.all, 'list', params ?? {}] as const,
   schedules: (staffId: number, from?: string, to?: string) =>
     [...staffKeys.all, staffId, 'schedules', from, to] as const,
 };

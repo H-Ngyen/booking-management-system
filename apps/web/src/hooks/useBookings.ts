@@ -1,40 +1,32 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { ApiError } from '@/lib/client';
-import {
-  mockAvailableSlots,
-  mockCancelBooking,
-  mockCreateBooking,
-  mockListBookings,
-  mockListMyBookings,
-  mockUpdateBookingStatus,
-  type MockBookingListParams,
-} from '@/lib/mock/store';
+import * as apiModules from '@/lib/api/modules';
+import type { BookingListParams } from '@/lib/api/modules';
 import { authKeys, bookingKeys } from '@/lib/query-keys';
 import type { AuthUser, BookingStatus } from '@/lib/types';
 import { useApiMutation, useApiQuery } from './useApi';
 
 function readSession(queryClient: ReturnType<typeof useQueryClient>): AuthUser {
+  // Mutations gate on the cached session so unauthenticated calls never fire;
+  // the 401 interceptor redirects to /login as a backstop.
   const me = queryClient.getQueryData<AuthUser>(authKeys.me);
-  if (!me) throw new ApiError(401, 'Phiên đã hết hạn, vui lòng đăng nhập lại.', 'UNAUTHORIZED');
+  if (!me) throw new Error('Phiên đã hết hạn, vui lòng đăng nhập lại.');
   return me;
 }
 
-export function useMyBookings(params: MockBookingListParams = {}) {
+export function useMyBookings(params: BookingListParams = {}) {
   const queryClient = useQueryClient();
   const me = queryClient.getQueryData<AuthUser>(authKeys.me);
   return useApiQuery({
     queryKey: bookingKeys.myList(params),
-    // TODO(api): queryFn: () => apiModules.listMyBookings(params),
-    queryFn: () => mockListMyBookings(me?.id ?? 0, params),
+    queryFn: () => apiModules.listMyBookings(params),
     enabled: me != null,
   });
 }
 
-export function useBookings(params: MockBookingListParams = {}) {
+export function useBookings(params: BookingListParams = {}) {
   return useApiQuery({
     queryKey: bookingKeys.list(params),
-    // TODO(api): queryFn: () => apiModules.listBookings(params),
-    queryFn: () => mockListBookings(params),
+    queryFn: () => apiModules.listBookings(params),
   });
 }
 
@@ -42,9 +34,8 @@ export function useAvailableSlots(serviceId: number | null, staffId: number | nu
   const enabled = serviceId != null && staffId != null && date.length > 0;
   return useApiQuery({
     queryKey: bookingKeys.slots(serviceId ?? 0, staffId ?? 0, date),
-    // TODO(api): queryFn: () => apiModules.getAvailableSlots({ serviceId, staffId, date }),
     queryFn: () =>
-      mockAvailableSlots(serviceId as number, staffId as number, date),
+      apiModules.getAvailableSlots({ serviceId: serviceId as number, staffId: staffId as number, date }),
     enabled,
   });
 }
@@ -53,9 +44,9 @@ export function useCreateBooking() {
   const queryClient = useQueryClient();
   return useApiMutation(
     (input: { serviceId: number; staffId: number; startTime: string; customerNote?: string }) => {
-      const me = readSession(queryClient);
-      // TODO(api): mutationFn: (input) => apiModules.createBooking(input),
-      return mockCreateBooking({ ...input, customerId: me.id });
+      // Backend derives the customer from the JWT; no customerId needed.
+      readSession(queryClient);
+      return apiModules.createBooking(input);
     },
     {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingKeys.all }),
@@ -66,9 +57,8 @@ export function useCreateBooking() {
 export function useUpdateBookingStatus() {
   const queryClient = useQueryClient();
   return useApiMutation(({ id, status }: { id: number; status: BookingStatus }) => {
-    const me = readSession(queryClient);
-    // TODO(api): mutationFn: ({ id, status }) => apiModules.updateBookingStatus(id, status),
-    return mockUpdateBookingStatus(id, status, me.role);
+    readSession(queryClient);
+    return apiModules.updateBookingStatus(id, status);
   }, {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingKeys.all }),
   });
@@ -77,9 +67,8 @@ export function useUpdateBookingStatus() {
 export function useCancelBooking() {
   const queryClient = useQueryClient();
   return useApiMutation(({ id, reason }: { id: number; reason: string }) => {
-    const me = readSession(queryClient);
-    // TODO(api): mutationFn: ({ id, reason }) => apiModules.cancelBooking(id, reason),
-    return mockCancelBooking(id, reason, me.id, me.role);
+    readSession(queryClient);
+    return apiModules.cancelBooking(id, reason);
   }, {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: bookingKeys.all }),
   });

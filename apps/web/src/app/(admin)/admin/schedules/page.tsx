@@ -63,7 +63,7 @@ export default function AdminSchedulesPage() {
                   <SelectValue placeholder="— Chọn —" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(staffs ?? []).map((s) => (
+                  {(staffs?.items ?? []).map((s) => (
                     <SelectItem key={s.id} value={String(s.id)}>
                       {s.fullName} {!s.isActive && '(đã khóa)'}
                     </SelectItem>

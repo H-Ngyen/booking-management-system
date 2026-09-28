@@ -1,37 +1,52 @@
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  mockCreateService,
-  mockListServices,
-  mockUpdateService,
-  type MockServiceInput,
-  type MockServiceListParams,
-} from '@/lib/mock/store';
+import * as apiModules from '@/lib/api/modules';
+import type { ServiceListParams } from '@/lib/api/modules';
 import { serviceKeys } from '@/lib/query-keys';
 import { useApiMutation, useApiQuery } from './useApi';
 
-export function useServices(params: MockServiceListParams = {}) {
+export function useServices(params: ServiceListParams = {}) {
+  const { activeOnly = true, ...listParams } = params;
   return useApiQuery({
     queryKey: serviceKeys.list(params),
-    // TODO(api): queryFn: () => apiModules.listServices(params),
-    queryFn: () => mockListServices(params),
+    // Backend has no activeOnly param (it filters inactive server-side for
+    // non-admins); filter client-side so customer views stay clean while
+    // admin pages can still see locked services.
+    queryFn: () =>
+      apiModules.listServices(listParams).then((paged) => ({
+        ...paged,
+        items: activeOnly ? paged.items.filter((s) => s.isActive) : paged.items,
+      })),
   });
 }
 
 export function useCreateService() {
   const queryClient = useQueryClient();
-  return useApiMutation((input: MockServiceInput) => mockCreateService(input), {
-    // TODO(api): mutationFn: (input) => apiModules.createService(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: serviceKeys.all }),
-  });
+  return useApiMutation(
+    (input: { name: string; description?: string | null; durationMinutes: number; price: number }) =>
+      apiModules.createService(input),
+    {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: serviceKeys.all }),
+    },
+  );
 }
 
 export function useUpdateService() {
   const queryClient = useQueryClient();
   return useApiMutation(
-    ({ id, patch }: { id: number; patch: Partial<MockServiceInput> }) =>
-      mockUpdateService(id, patch),
+    ({
+      id,
+      input,
+    }: {
+      id: number;
+      input: {
+        name: string;
+        description?: string | null;
+        durationMinutes: number;
+        price: number;
+        isActive: boolean;
+      };
+    }) => apiModules.updateService(id, input),
     {
-      // TODO(api): mutationFn: ({ id, patch }) => apiModules.updateService(id, patch),
       onSuccess: () => queryClient.invalidateQueries({ queryKey: serviceKeys.all }),
     },
   );

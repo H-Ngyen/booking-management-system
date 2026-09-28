@@ -93,7 +93,7 @@ export default function AdminServicesPage() {
     };
     if (editing) {
       updateService.mutate(
-        { id: editing.id, patch: input },
+        { id: editing.id, input },
         { onSuccess: () => setEditing(null), onError: (err) => setFormError(getErrorMessage(err)) },
       );
     } else {
@@ -105,7 +105,17 @@ export default function AdminServicesPage() {
   };
 
   const toggleActive = (service: ServiceItem) => {
-    updateService.mutate({ id: service.id, patch: { isActive: !service.isActive } });
+    // Backend update requires the full object: resend current values.
+    updateService.mutate({
+      id: service.id,
+      input: {
+        name: service.name,
+        description: service.description ?? null,
+        durationMinutes: service.durationMinutes,
+        price: service.price,
+        isActive: !service.isActive,
+      },
+    });
   };
 
   return (

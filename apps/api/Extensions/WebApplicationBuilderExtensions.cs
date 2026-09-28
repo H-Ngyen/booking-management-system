@@ -23,6 +23,7 @@ public static class WebApplicationBuilderExtensions
             options.UseNpgsql(connectionString));
 
         builder.AddSignalRInfrastructure(frontendOrigin);
+        builder.AddHangfireInfrastructure(connectionString);
 
         builder.Services.AddAuthentication();
         builder.Services.AddControllers()

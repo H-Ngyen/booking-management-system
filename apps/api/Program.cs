@@ -19,6 +19,8 @@ if (app.Environment.IsDevelopment())
     await DbSeeder.SeedAsync(db);
 }
 
+app.UseHangfireInfrastructure();
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 if (!app.Environment.IsDevelopment())

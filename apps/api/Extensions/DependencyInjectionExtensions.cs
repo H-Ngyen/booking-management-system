@@ -3,6 +3,7 @@ using API.Interfaces;
 using API.Interfaces.Authorization;
 using API.Interfaces.Repositories;
 using API.Interfaces.Services;
+using API.Jobs;
 using API.Middlewares;
 using API.Repositories;
 using API.Services;
@@ -40,6 +41,9 @@ public static class DependencyInjectionExtension
 
         // SignalR
         services.AddSingleton<IBookingNotifier, BookingNotifier>();
+
+        // Hangfire jobs resolve per execution inside a scope
+        services.AddScoped<OverdueBookingJob>();
 
         return services;
     }

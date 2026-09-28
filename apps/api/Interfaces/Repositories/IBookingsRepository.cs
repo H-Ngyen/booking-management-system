@@ -11,5 +11,10 @@ public interface IBookingsRepository
     Task<bool> ExistsByCodeAsync(string bookingCode);
     Task<IEnumerable<Booking>> GetActiveBookingsAsync(int staffId, DateOnly date);
     Task<bool> HasActiveBookingsAsync(int staffId, DateOnly date, TimeOnly start, TimeOnly end);
+    /// <summary>
+    /// Atomically cancels overdue bookings (Pending past start, Confirmed past
+    /// end) and returns the affected (booking, customer) ids for notification.
+    /// </summary>
+    Task<List<(int BookingId, int CustomerId)>> CancelOverdueBookingsAsync(DateTime utcNow, string reason);
     Task SaveChanges();
 }

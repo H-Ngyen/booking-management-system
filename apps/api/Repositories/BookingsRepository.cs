@@ -85,5 +85,29 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
             b.StartTime < shiftEnd && b.EndTime > shiftStart);
     }
 
+    public async Task<List<(int BookingId, int CustomerId)>> CancelOverdueBookingsAsync(DateTime utcNow, string reason)
+    {
+        List<(int BookingId, int CustomerId)> overdue = await NoTrackingQuery
+            .Where(b => (b.Status == BookingStatus.Pending && b.StartTime <= utcNow)
+                || (b.Status == BookingStatus.Confirmed && b.EndTime <= utcNow))
+            .Select(b => new ValueTuple<int, int>(b.Id, b.CustomerId))
+            .ToListAsync();
+
+        if (overdue.Count == 0)
+            return overdue;
+
+        List<int> ids = overdue.Select(b => b.BookingId).ToList();
+        await _dbContext.Bookings
+            .Where(b => ids.Contains(b.Id)
+                && ((b.Status == BookingStatus.Pending && b.StartTime <= utcNow)
+                    || (b.Status == BookingStatus.Confirmed && b.EndTime <= utcNow)))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(b => b.Status, BookingStatus.Cancelled)
+                .SetProperty(b => b.CancellationReason, reason)
+                .SetProperty(b => b.UpdatedAt, utcNow));
+
+        return overdue;
+    }
+
     public async Task SaveChanges() => await _dbContext.SaveChangesAsync();
 }

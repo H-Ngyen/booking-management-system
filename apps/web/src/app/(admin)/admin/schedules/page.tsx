@@ -1,10 +1,12 @@
 'use client';
 
 import { useMemo, useState, type FormEvent } from 'react';
-import { useCreateSchedule, useSchedules, useStaffs } from '@/hooks';
+import { X } from 'lucide-react';
+import { useCreateSchedule, useDeleteSchedule, useSchedules, useStaffs } from '@/hooks';
 import { getErrorMessage } from '@/lib/error-messages';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState, ErrorState, Spinner } from '@/components/ui/feedback';
 import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -21,6 +23,9 @@ export default function AdminSchedulesPage() {
 
   const { data: schedules, isLoading, isError, error, refetch } = useSchedules(staffId);
   const createSchedule = useCreateSchedule();
+  const deleteSchedule = useDeleteSchedule();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   const grouped = useMemo(() => {
     const map = new Map<string, NonNullable<typeof schedules>>();
@@ -120,6 +125,17 @@ export default function AdminSchedulesPage() {
                       {shifts.map((s) => (
                         <span key={s.id} className="rounded-full bg-surface-3 px-3 py-1 text-[13px] font-semibold text-primary">
                           {s.startTime} – {s.endTime}
+                          <button
+                            type="button"
+                            aria-label={`Xóa ca ${s.startTime} – ${s.endTime}`}
+                            onClick={() => {
+                              setDeletingId(s.id);
+                              setDeleteError('');
+                            }}
+                            className="rounded-full p-0.5 hover:bg-surface-2"
+                          >
+                            <X className="size-3.5" />
+                          </button>
                         </span>
                       ))}
                     </div>
@@ -130,6 +146,41 @@ export default function AdminSchedulesPage() {
           </Table>
         </Card>
       )}
+
+      <Dialog open={deletingId != null} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xóa ca làm việc</DialogTitle>
+            <DialogDescription>
+              Ca đã có booking không thể xóa. Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm font-medium text-red-600">{deleteError}</p>}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeletingId(null)}>
+              Đóng
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              loading={deleteSchedule.isPending}
+              onClick={() => {
+                if (staffId == null || deletingId == null) return;
+                setDeleteError('');
+                deleteSchedule.mutate(
+                  { staffId, scheduleId: deletingId },
+                  {
+                    onSuccess: () => setDeletingId(null),
+                    onError: (err) => setDeleteError(getErrorMessage(err)),
+                  },
+                );
+              }}
+            >
+              Xác nhận xóa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

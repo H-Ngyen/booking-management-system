@@ -12,5 +12,6 @@ export const CUSTOMER_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { href: '/admin/bookings', label: 'Bookings' },
   { href: '/admin/services', label: 'Dịch vụ' },
+  { href: '/admin/staffs', label: 'Nhân viên' },
   { href: '/admin/schedules', label: 'Lịch làm việc' },
 ];

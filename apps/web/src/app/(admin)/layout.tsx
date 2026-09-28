@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, CalendarDays, ConciergeBell, LogOut, Menu, ReceiptText } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ConciergeBell, LogOut, Menu, ReceiptText, Users } from 'lucide-react';
 import { ADMIN_NAV } from '@/lib/nav';
 import { useBookingRealtime } from '@/hooks';
 import { useAuthMe, useLogout } from '@/hooks/useAuth';
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 const NAV_ICONS: Record<string, typeof ReceiptText> = {
   '/admin/bookings': ReceiptText,
   '/admin/services': ConciergeBell,
+  '/admin/staffs': Users,
   '/admin/schedules': CalendarDays,
 };
 

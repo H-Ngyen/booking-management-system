@@ -23,9 +23,14 @@ public class BookingsRepository(DataContext context) : BaseRepository<Booking>(c
 
         int totalCount = await baseQuery.CountAsync();
 
+        // long arithmetic: pageSize * (pageNumber - 1) overflows int32 for huge
+        // page numbers (negative Skip => DB 2201X => 500). Clamp instead.
+        long offset = (long)pageSize * (pageNumber - 1);
+        int skip = offset > int.MaxValue ? int.MaxValue : (int)offset;
+
         IEnumerable<Booking>? bookings = await baseQuery
             .OrderByDescending(b => b.StartTime)
-            .Skip(pageSize * (pageNumber - 1))
+            .Skip(skip)
             .Take(pageSize)
             .ToListAsync();
 

@@ -26,8 +26,13 @@ public class ServicesRepository(DataContext context) : BaseRepository<Service>(c
 
         int totalCount = await baseQuery.CountAsync();
 
+        // long arithmetic: pageSize * (pageNumber - 1) overflows int32 for huge
+        // page numbers (negative Skip => DB 2201X => 500). Clamp instead.
+        long offset = (long)pageSize * (pageNumber - 1);
+        int skip = offset > int.MaxValue ? int.MaxValue : (int)offset;
+
         IEnumerable<Service>? services = await baseQuery
-            .Skip(pageSize * (pageNumber - 1))
+            .Skip(skip)
             .Take(pageSize)
             .ToListAsync();
 

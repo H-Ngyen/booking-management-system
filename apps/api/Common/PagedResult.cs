@@ -12,7 +12,10 @@ public class PagedResult<T>
         Items = items;
         TotalItemsCount = totalCount;
         TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-        ItemsFrom = totalCount == 0 ? 0 : pageSize * (pageNumber - 1) + 1;
-        ItemsTo = Math.Min(ItemsFrom + pageSize - 1, TotalItemsCount);
+        // long arithmetic: same int32 overflow guard as the repository Skip.
+        long from = (long)pageSize * (pageNumber - 1) + 1;
+        ItemsFrom = totalCount == 0 ? 0 : (from > int.MaxValue ? int.MaxValue : (int)from);
+        long to = (long)ItemsFrom + pageSize - 1;
+        ItemsTo = (int)Math.Min(to, (long)totalCount);
     }
 }

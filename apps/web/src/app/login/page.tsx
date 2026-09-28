@@ -92,7 +92,7 @@ export default function LoginPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tài khoản demo</CardTitle>
-            <CardDescription>Bấm để điền nhanh (mock, chưa đấu API).</CardDescription>
+            <CardDescription>Bấm để điền nhanh tài khoản demo.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {DEMO_ACCOUNTS.map((a) => (

@@ -69,7 +69,8 @@ export function useBookingRealtime(enabled = true) {
       activeConnection = getBookingHub();
       activeConnection.on('BookingChanged', onChanged);
       // The API may still be starting (dotnet watch rebuild): retry with
-      // backoff while this effect is alive, then give up quietly.
+      // backoff while this effect is alive, then tell the user realtime is off
+      // (otherwise the screen silently goes stale).
       for (let attempt = 0; attempt < 10 && !cancelled; attempt++) {
         try {
           await ensureStarted(userId);
@@ -77,6 +78,9 @@ export function useBookingRealtime(enabled = true) {
         } catch {
           await new Promise((r) => setTimeout(r, 3000));
         }
+      }
+      if (!cancelled) {
+        toast.warning('Mất kết nối cập nhật trực tiếp. Dữ liệu có thể cũ — hãy tải lại trang.');
       }
     };
     void boot();
